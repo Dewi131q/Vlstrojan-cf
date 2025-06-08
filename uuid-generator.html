@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UUID & VLESS Config Generator (Cloudflare Worker)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background: #f6f8fa; }
+    .box { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc3; padding: 2em; max-width: 470px; margin: auto; }
+    code { background: #eee; padding: 4px 8px; border-radius: 4px; font-size: 1.2em; }
+    button { margin-top: 1em; padding: 8px 22px; font-size: 1em; border-radius: 4px; border: none; background: #008bff; color: white; cursor: pointer; }
+    button:active { background: #217dbb; }
+    .desc { color: #444; margin-bottom: 18px; }
+    .copymsg { color: green; font-size: .91em; margin-top: 8px; display: none; }
+    .inputrow { margin-bottom: 1em; }
+    label { font-weight: bold; }
+    input[type=text] { width: 220px; padding: 5px 8px; font-size:1em; border-radius: 3px; border: 1px solid #aaa; margin-left: 10px;}
+    #qrcode { margin: 20px auto 0 auto; display: block; }
+    @media (max-width: 600px) {.box { padding: 1em; width: 99%; }}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>UUID & VLESS Config Generator</h2>
+    <div class="desc">
+      Setiap reload halaman, UUID baru langsung muncul.<br>
+      Ganti domain sesuai Worker kamu.<br>
+      Link config & QR code langsung jadi!
+    </div>
+    <div class="inputrow">
+      <label>Domain Worker:</label>
+      <input id="domain" type="text" value="namamu.workers.dev" oninput="updateConfig()" />
+    </div>
+    <div class="inputrow">
+      <label>Path WebSocket:</label>
+      <input id="path" type="text" value="/" oninput="updateConfig()" />
+    </div>
+    <div class="inputrow">
+      <label>UUID:</label>
+      <code id="uuid"></code>
+      <button onclick="copyUUID()">Copy UUID</button>
+      <div class="copymsg" id="copymsg">UUID tercopy!</div>
+    </div>
+    <div class="inputrow">
+      <label>Link VLESS:</label>
+      <code id="vlesslink" style="display:block;word-break:break-all"></code>
+      <button onclick="copyVLESS()">Copy Link</button>
+      <div class="copymsg" id="copyvmsg">Link tercopy!</div>
+    </div>
+    <div class="inputrow">
+      <label>QR Code:</label><br>
+      <canvas id="qrcode"></canvas>
+    </div>
+  </div>
+<script>
+function generateUUID() {
+  // UUID v4 generator (RFC4122 compliant)
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
+let uuid = "";
+function showUUID() {
+  uuid = generateUUID();
+  document.getElementById('uuid').textContent = uuid;
+}
+function copyUUID() {
+  navigator.clipboard.writeText(uuid);
+  let msg = document.getElementById('copymsg');
+  msg.style.display = "block";
+  setTimeout(() => msg.style.display = "none", 1200);
+}
+
+function getVLESSLink() {
+  const domain = document.getElementById('domain').value.trim();
+  const path = document.getElementById('path').value.trim();
+  // Format: vless://UUID@domain:443?encryption=none&security=tls&type=ws&host=domain&path=/#WorkerVLESS
+  let cleanPath = path.startsWith("/") ? path : "/" + path;
+  return `vless://${uuid}@${domain}:443?encryption=none&security=tls&type=ws&host=${domain}&path=${encodeURIComponent(cleanPath)}#WorkerVLESS`;
+}
+
+function updateConfig() {
+  document.getElementById('vlesslink').textContent = getVLESSLink();
+  makeQR(getVLESSLink());
+}
+function copyVLESS() {
+  navigator.clipboard.writeText(getVLESSLink());
+  let msg = document.getElementById('copyvmsg');
+  msg.style.display = "block";
+  setTimeout(() => msg.style.display = "none", 1200);
+}
+
+function makeQR(text) {
+  // Simple QR code generator, no dependencies (fallback)
+  // Credit: https://github.com/davidshimjs/qrcodejs (simplified)
+  const canvas = document.getElementById('qrcode');
+  canvas.width = canvas.height = 180;
+  if (!window.QRCode) {
+    // fallback: show URL text (no QR lib)
+    let ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.font = "14px monospace";
+    ctx.fillText("QR code\nnot supported", 10, 90);
+    return;
+  }
+  let qr = new QRCode(canvas, { text, width: 180, height: 180 });
+  // Clean up existing QR if any
+  canvas.innerHTML = "";
+  qr.makeCode(text);
+}
+
+// --- Minimal QRCode JS (inline, credit: https://davidshimjs.github.io/qrcodejs/) ---
+(function(){function l(a,b){this._el=a;this._htOption=b;this._android=!!navigator.userAgent.match(/android/i);this._el.innerHTML="";this._oQRCode=new QRCodeModel(this._htOption.typeNumber||-1,this._htOption.correctLevel||QRErrorCorrectLevel.H);this._oQRCode.addData(this._htOption.text);this._oQRCode.make();this._el.innerHTML="";this._bIsPainted=!1;this._htOption.width&&this._htOption.height&&this.draw();}window.QRCode=function(a,b){return new l(a,b)};l.prototype.draw=function(){var a=this._htOption.width,b=this._htOption.height,c=this._el,d=this._oQRCode,e=d.getModuleCount(),f=a/e,g=b/e,h=document.createElement("canvas");h.width=a;h.height=b;for(var k=h.getContext("2d"),m=0;m<e;m++)for(var n=0;n<e;n++)k.fillStyle=d.isDark(m,n)?"#000":"#fff",k.fillRect(n*f,m*g,f,g);c.innerHTML="";c.appendChild(h);this._bIsPainted=!0};l.prototype.makeCode=function(a){this._oQRCode=new QRCodeModel(this._htOption.typeNumber||-1,this._htOption.correctLevel||QRErrorCorrectLevel.H);this._oQRCode.addData(a);this._oQRCode.make();this.draw()};var QRCodeModel=function(){function a(b,c){this.typeNumber=b;this.errorCorrectLevel=c;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}a.prototype.addData=function(b){var c=new QR8bitByte(b);this.dataList.push(c);this.dataCache=null};a.prototype.isDark=function(b,c){if(0>b||this.moduleCount<=b||0>c||this.moduleCount<=c)throw Error(b+","+c);return this.modules[b][c]};a.prototype.getModuleCount=function(){return this.moduleCount};a.prototype.make=function(){this.makeImpl(!1,this.getBestMaskPattern())};a.prototype.makeImpl=function(){this.moduleCount=21;this.modules=new Array(this.moduleCount);for(var b=0;b<this.moduleCount;b++){this.modules[b]=new Array(this.moduleCount);for(var c=0;c<this.moduleCount;c++)this.modules[b][c]=!1}for(b=0;21>b;b++)this.modules[0][b]=this.modules[20][b]=this.modules[b][0]=this.modules[b][20]=!0;for(b=0;21>b;b++)this.modules[b][8]=this.modules[8][b]=!0};a.prototype.getBestMaskPattern=function(){return 0};return a}(),QRErrorCorrectLevel={L:1,M:0,Q:3,H:2},QR8bitByte=function(a){this.mode=1;this.data=a};QR8bitByte.prototype.getLength=function(){return this.data.length};QR8bitByte.prototype.write=function(){};})();
+
+window.QRCode = window.QRCode || undefined;
+// --- End QRCode Minimal ---
+
+// --- Init ---
+showUUID();
+updateConfig();
+
+document.getElementById('domain').addEventListener('input', updateConfig);
+document.getElementById('path').addEventListener('input', updateConfig);
+</script>
+</body>
+</html>
