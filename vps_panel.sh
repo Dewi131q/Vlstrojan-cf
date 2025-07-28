@@ -10,6 +10,7 @@ DOMAIN="vpn.example.com"
 RAM="512MB / 1GB"
 CPU_CORES="1 Core"
 UPTIME="2 days 3 hours"
+BANNER="⚙️  VPS PANEL - VPN MANAGER v1.0"
 
 # --- Functions ---
 check_service_status() {
@@ -24,7 +25,7 @@ check_service_status() {
 show_menu() {
     clear
     echo "==================================="
-    echo "   ⚙️  VPS PANEL - VPN MANAGER v1.0"
+    echo "   $BANNER"
     echo "==================================="
     echo " 🖥️  IP VPS     : $IP_VPS"
     echo " 📡  ISP        : $ISP"
@@ -69,39 +70,187 @@ show_menu() {
 }
 
 ssh_account_manager() {
-    echo "SSH Account Manager"
+    clear
+    echo "==================================="
+    echo "   SSH Account Manager"
+    echo "==================================="
+    echo " [1] Create SSH Account"
+    echo " [2] Delete SSH Account"
+    echo " [3] View SSH Accounts"
+    echo " [0] Back to Main Menu"
+    echo "==================================="
+    read -p "Enter your choice [0-3]: " choice
+    case $choice in
+        1) create_ssh_account ;;
+        2) delete_ssh_account ;;
+        3) view_ssh_accounts ;;
+        0) return ;;
+        *) echo "Invalid option" ;;
+    esac
+}
+
+create_ssh_account() {
+    echo "Create SSH Account"
+}
+
+delete_ssh_account() {
+    echo "Delete SSH Account"
+}
+
+view_ssh_accounts() {
+    echo "View SSH Accounts"
 }
 
 vless_account_manager() {
-    echo "VLESS Account Manager"
+    clear
+    echo "==================================="
+    echo "   VLESS Account Manager"
+    echo "==================================="
+    echo " [1] Create VLESS Account"
+    echo " [2] Delete VLESS Account"
+    echo " [3] View VLESS Accounts"
+    echo " [0] Back to Main Menu"
+    echo "==================================="
+    read -p "Enter your choice [0-3]: " choice
+    case $choice in
+        1) create_vless_account ;;
+        2) delete_vless_account ;;
+        3) view_vless_accounts ;;
+        0) return ;;
+        *) echo "Invalid option" ;;
+    esac
+}
+
+create_vless_account() {
+    echo "Create VLESS Account"
+}
+
+delete_vless_account() {
+    echo "Delete VLESS Account"
+}
+
+view_vless_accounts() {
+    echo "View VLESS Accounts"
 }
 
 vmess_account_manager() {
-    echo "VMess Account Manager"
+    clear
+    echo "==================================="
+    echo "   VMess Account Manager"
+    echo "==================================="
+    echo " [1] Create VMess Account"
+    echo " [2] Delete VMess Account"
+    echo " [3] View VMess Accounts"
+    echo " [0] Back to Main Menu"
+    echo "==================================="
+    read -p "Enter your choice [0-3]: " choice
+    case $choice in
+        1) create_vmess_account ;;
+        2) delete_vmess_account ;;
+        3) view_vmess_accounts ;;
+        0) return ;;
+        *) echo "Invalid option" ;;
+    esac
+}
+
+create_vmess_account() {
+    echo "Create VMess Account"
+}
+
+delete_vmess_account() {
+    echo "Delete VMess Account"
+}
+
+view_vmess_accounts() {
+    echo "View VMess Accounts"
 }
 
 trojan_account_manager() {
-    echo "Trojan Account Manager"
+    clear
+    echo "==================================="
+    echo "   Trojan Account Manager"
+    echo "==================================="
+    echo " [1] Create Trojan Account"
+    echo " [2] Delete Trojan Account"
+    echo " [3] View Trojan Accounts"
+    echo " [0] Back to Main Menu"
+    echo "==================================="
+    read -p "Enter your choice [0-3]: " choice
+    case $choice in
+        1) create_trojan_account ;;
+        2) delete_trojan_account ;;
+        3) view_trojan_accounts ;;
+        0) return ;;
+        *) echo "Invalid option" ;;
+    esac
+}
+
+create_trojan_account() {
+    echo "Create Trojan Account"
+}
+
+delete_trojan_account() {
+    echo "Delete Trojan Account"
+}
+
+view_trojan_accounts() {
+    echo "View Trojan Accounts"
 }
 
 change_domain() {
-    echo "Change Domain"
+    read -p "Enter new domain: " new_domain
+    DOMAIN=$new_domain
+    echo "Domain has been changed to $DOMAIN"
 }
 
 change_banner() {
-    echo "Change Banner"
+    read -p "Enter new banner: " new_banner
+    BANNER=$new_banner
+    echo "Banner has been changed to $BANNER"
 }
 
 check_port_status() {
-    echo "Check Port Status"
+    clear
+    echo "==================================="
+    echo "   Check Port Status"
+    echo "==================================="
+    echo "SSH Port (22): $(netstat -tulpn | grep :22)"
+    echo "Dropbear Port (109, 143): $(netstat -tulpn | grep -E ':109|:143')"
+    echo "Stunnel5 Port (443, 777): $(netstat -tulpn | grep -E ':443|:777')"
+    echo "Squid Port (8080, 3128): $(netstat -tulpn | grep -E ':8080|:3128')"
+    echo "OpenVPN Port (1194): $(netstat -tulpn | grep :1194)"
+    echo "Xray VLESS Port (443): $(netstat -tulpn | grep :443)"
+    echo "Xray VMess Port (443): $(netstat -tulpn | grep :443)"
+    echo "Xray Trojan Port (443): $(netstat -tulpn | grep :443)"
+    echo "==================================="
 }
 
 restart_all_services() {
-    echo "Restart All Services"
+    clear
+    echo "==================================="
+    echo "   Restarting All Services"
+    echo "==================================="
+    systemctl restart nginx
+    systemctl restart dropbear
+    systemctl restart xray
+    systemctl restart websocket
+    systemctl restart stunnel5
+    systemctl restart squid
+    systemctl restart openvpn
+    echo "All services have been restarted."
+    echo "==================================="
 }
 
 show_all_active_accounts() {
-    echo "Show All Active Accounts"
+    clear
+    echo "==================================="
+    echo "   All Active Accounts"
+    echo "==================================="
+    view_ssh_accounts
+    view_vless_accounts
+    view_vmess_accounts
+    view_trojan_accounts
+    echo "==================================="
 }
 
 # --- Main ---
